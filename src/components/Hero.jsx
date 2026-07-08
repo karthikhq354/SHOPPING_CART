@@ -1,46 +1,79 @@
-import giftbanner from "../assets/images/giftbanner.png";
 import { useNavigate } from "react-router-dom";
+import heroVideo from "../assets/videos/hero.mp4";
+import heroPoster from "../assets/images/giftbanner.png";
 
 export default function Hero() {
-   const navigate = useNavigate();
+  const navigate = useNavigate();
 
   return (
-    <section className="w-full min-h-screen bg-gradient-to-r from-pink-100 to-purple-200 flex items-center pt-20">
-      {/* pt-20 to offset fixed Navbar height */}
+    <section className="relative w-full min-h-screen overflow-hidden">
+      {/* Background Video */}
+      <div className="absolute inset-0 z-0">
+        <video
+          className="absolute inset-0 w-full h-full object-cover"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          poster={heroPoster}
+        >
+          <source src={heroVideo} type="video/mp4" />
+        </video>
 
-      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-10 flex flex-col lg:flex-row items-center justify-between gap-10">
-        
-        {/* Left Content */}
-        <div className="max-w-xl text-center lg:text-left">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-purple-800 leading-snug sm:leading-tight">
-            Make Every Moment <br /> Memorable
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/55 to-black/65" />
+      </div>
+
+      {/* Hero Content */}
+      <div className="relative z-10 flex min-h-screen items-start justify-center px-6 pt-36 sm:px-8 lg:px-10 lg:pt-40">
+        <div className="w-full max-w-[760px] text-center">
+
+          {/* Premium Badge */}
+          <div className="mb-8">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-8 py-3 text-xs font-semibold uppercase tracking-[5px] text-white backdrop-blur-xl shadow-lg">
+              🎁 Premium Gift Collection
+            </span>
+          </div>
+
+          {/* Heading */}
+          <h1 className="mx-auto max-w-[700px] text-white font-black leading-[1.05] tracking-[-2px]
+              text-[44px]
+              sm:text-[56px]
+              lg:text-[64px]">
+
+            <span className="block">Find the Perfect Gift</span>
+            <span className="block">for Every</span>
+            <span className="block">Special Moment</span>
           </h1>
 
-          <p className="mt-4 sm:mt-6 text-base sm:text-lg text-gray-600">
-            Discover unique gifts that spark joy and celebrate life&apos;s
-            precious moments
+          {/* Description */}
+          <p className="mx-auto mt-8 max-w-[620px] text-lg leading-9 text-white/80 lg:text-xl">
+            Discover unique, personalized, and premium gifts carefully
+            selected for birthdays, anniversaries, weddings, festivals,
+            and every unforgettable celebration.
           </p>
 
-          <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center lg:justify-start">
-            <button onClick={() => navigate("/products")} className="bg-yellow-400 text-white px-6 sm:px-8 py-3 rounded-2xl font-semibold shadow-md hover:bg-yellow-500 transition">
+          {/* Buttons */}
+          <div className="mt-12 flex flex-col items-center justify-center gap-5 sm:flex-row">
+
+            <button
+              onClick={() => navigate("/products")}
+              className="h-14 rounded-full bg-white px-10 font-semibold text-black shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+            >
               Shop Now
             </button>
 
-            <button onClick={() => navigate("/products")} className="border-2 border-purple-400 text-purple-600 px-6 sm:px-8 py-3 rounded-2xl font-semibold hover:bg-purple-400 hover:text-white transition">
-              Explore Gifts
+            <button
+              onClick={() => navigate("/products")}
+              className="h-14 rounded-full border border-white/70 bg-transparent px-10 font-semibold text-white transition-all duration-300 hover:scale-105 hover:bg-white hover:text-black"
+            >
+              Explore Collection
             </button>
+
           </div>
-        </div>
 
-        {/* Right Image */}
-        <div className="flex justify-center lg:justify-end w-full lg:w-auto px-4 lg:px-0">
-          <img
-            src={giftbanner}
-            alt="Gift Boxes"
-            className="w-full lg:w-[520px] rounded-3xl shadow-lg"
-          />
         </div>
-
       </div>
     </section>
   );

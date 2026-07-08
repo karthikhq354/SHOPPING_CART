@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 /* ---------- Components ---------- */
 import Navbar from "./components/Navbar";
@@ -16,6 +16,8 @@ import ProductDetails from "./pages/ProductDetails";
 import ProductsListPage from "./pages/ProductsListPage";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+
+const STORAGE_KEY = "impressivegift-cart";
 
 /* ---------- Home Page ---------- */
 const Home = ({ addToCart }) => (
@@ -42,10 +44,24 @@ const Contact = () => (
 
 export default function App() {
   /* ---------- CART STATE ---------- */
-  const [cartItems, setCartItems] = useState([]);
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      const savedCart = window.localStorage.getItem(STORAGE_KEY);
+      return savedCart ? JSON.parse(savedCart) : [];
+    } catch (error) {
+      console.error("Failed to parse cart from localStorage", error);
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cartItems));
+  }, [cartItems]);
 
   /* ---------- ADD TO CART ---------- */
   const addToCart = (product) => {
+    const quantityToAdd = Number(product.quantity) > 0 ? Number(product.quantity) : 1;
+
     setCartItems((prev) => {
       const existingItem = prev.find(
         (item) => item.id === product.id
@@ -54,18 +70,21 @@ export default function App() {
       if (existingItem) {
         return prev.map((item) =>
           item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + quantityToAdd }
             : item
         );
       }
 
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { ...product, quantity: quantityToAdd }];
     });
   };
 
   /* ---------- UPDATE QUANTITY ---------- */
   const updateQuantity = (id, qty) => {
-    if (qty <= 0) return;
+    if (qty <= 0) {
+      removeFromCart(id);
+      return;
+    }
 
     setCartItems((prev) =>
       prev.map((item) =>
@@ -81,6 +100,11 @@ export default function App() {
     setCartItems((prev) =>
       prev.filter((item) => item.id !== id)
     );
+  };
+
+  /* ---------- CLEAR CART ---------- */
+  const clearCart = () => {
+    setCartItems([]);
   };
 
   /* ---------- CART COUNT ---------- */
@@ -123,7 +147,15 @@ export default function App() {
             />
           }
         />
-        <Route path="/checkout" element={<Checkout />} />
+        <Route
+          path="/checkout"
+          element={
+            <Checkout
+              cartItems={cartItems}
+              clearCart={clearCart}
+            />
+          }
+        />
 
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />

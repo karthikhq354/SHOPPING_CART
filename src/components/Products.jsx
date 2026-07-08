@@ -26,8 +26,8 @@ export default function Products({ addToCart }) {
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 px-6">
         {allProducts.slice(0, visibleCount).map((p) => (
-          <Link key={p.id} to={`/products/${p.id}`} className="group">
-            <div className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition cursor-pointer">
+          <div key={p.id} className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition">
+            <Link to={`/products/${p.id}`} className="group block">
               <img
                 src={p.img}
                 alt={p.name}
@@ -38,19 +38,18 @@ export default function Products({ addToCart }) {
                 <h3 className="text-purple-700 font-semibold mb-1">{p.name}</h3>
                 <p className="text-yellow-500 font-bold">₹{p.price}</p>
                 <p className="text-yellow-400 text-sm">★★★★★</p>
-
-                <button
-                  onClick={(e) => {
-                    e.preventDefault(); // prevent navigation
-                    addToCart(p);
-                  }}
-                  className="mt-4 w-full bg-purple-500 text-white py-2 rounded-xl font-medium hover:bg-purple-600 transition"
-                >
-                  Add to Cart
-                </button>
               </div>
+            </Link>
+
+            <div className="px-4 pb-4">
+              <button
+                onClick={() => addToCart(p)}
+                className="w-full bg-purple-500 text-white py-2 rounded-xl font-medium hover:bg-purple-600 transition"
+              >
+                Add to Cart
+              </button>
             </div>
-          </Link>
+          </div>
         ))}
       </div>
 

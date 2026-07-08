@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-export default function Checkout() {
+export default function Checkout({ cartItems, clearCart }) {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -11,13 +12,26 @@ export default function Checkout() {
     payment: "card",
   });
 
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + Number(item.price) * item.quantity,
+    0
+  );
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (cartItems.length === 0) {
+      alert("Your cart is empty.");
+      return;
+    }
+
     alert("Order placed successfully 🎉");
+    clearCart();
+    navigate("/");
   };
 
   return (
@@ -128,8 +142,8 @@ export default function Checkout() {
 
             <div className="space-y-4 text-sm text-gray-600">
               <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>₹999.00</span>
+                <span>Subtotal ({cartItems.length} items)</span>
+                <span>₹{subtotal.toFixed(2)}</span>
               </div>
 
               <div className="flex justify-between">
@@ -141,7 +155,7 @@ export default function Checkout() {
             <div className="border-t mt-6 pt-6 flex justify-between">
               <span className="font-bold text-purple-700">Total</span>
               <span className="text-xl font-bold text-yellow-500">
-                ₹999.00
+                ₹{subtotal.toFixed(2)}
               </span>
             </div>
 
