@@ -1,7 +1,14 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { Suspense, lazy } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-/* ---------- Components ---------- */
+/* ── User Contexts ── */
+import { AuthProvider } from "./context/AuthContext";
+import { CartProvider } from "./context/CartContext";
+
+/* ── Admin Context ── */
+import { AdminProvider } from "./admin/context/AdminContext";
+
+/* ── User Layout (eager — always needed) ── */
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
@@ -11,158 +18,189 @@ import Products from "./components/Products";
 import Occasions from "./components/Occasions";
 import Testimonials from "./components/Testimonials";
 
-/* ---------- Pages ---------- */
+/* ── User Pages ── */
 import ProductDetails from "./pages/ProductDetails";
 import ProductsListPage from "./pages/ProductsListPage";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+import AuthPage from "./pages/AuthPage";
+import Orders from "./pages/Orders";
+import Profile from "./pages/Profile";
+import ProtectedRoute from "./components/ProtectedRoute";
 
-const STORAGE_KEY = "impressivegift-cart";
+/* ── Admin Pages (Lazy Loaded) ── */
+const AdminLogin = lazy(() => import("./admin/pages/AdminLogin"));
+const AdminLayout = lazy(() => import("./admin/components/AdminLayout"));
+const AdminProtectedRoute = lazy(() =>
+  import("./admin/components/AdminProtectedRoute")
+);
+const Dashboard = lazy(() => import("./admin/pages/Dashboard"));
+const AdminProducts = lazy(() => import("./admin/pages/Products"));
+const AdminUsers = lazy(() => import("./admin/pages/Users"));
+const CartUsers = lazy(() => import("./admin/pages/CartUsers"));
+const AdminOrders = lazy(() => import("./admin/pages/Orders"));
 
-/* ---------- Home Page ---------- */
-const Home = ({ addToCart }) => (
+/* ── Loading Spinner ── */
+const AdminFallback = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-900">
+    <div className="w-10 h-10 rounded-full border-4 border-purple-400 border-t-transparent animate-spin"></div>
+  </div>
+);
+
+/* ── Home Page ── */
+const Home = () => (
   <>
     <Hero />
     <Categories />
-    <Products addToCart={addToCart} />
+    <Products />
     <Occasions />
     <Testimonials />
   </>
 );
 
+/* ── About Page ── */
 const About = () => (
-  <div className="mt-24 text-center text-2xl min-h-[60vh]">
-    About Us
+  <div className="mt-24 min-h-[60vh] flex flex-col items-center justify-center">
+    <h1 className="text-4xl font-bold text-purple-700">
+      About ImpressiveGift
+    </h1>
+
+    <p className="mt-4 max-w-xl text-center text-gray-600">
+      We craft meaningful gifts that celebrate life's most memorable moments.
+    </p>
   </div>
 );
 
+/* ── Contact Page ── */
 const Contact = () => (
-  <div className="mt-24 text-center text-2xl min-h-[60vh]">
-    Contact Us
+  <div className="mt-24 min-h-[60vh] flex flex-col items-center justify-center">
+    <h1 className="text-4xl font-bold text-purple-700">Contact Us</h1>
+
+    <p className="mt-4 text-lg text-gray-600">
+      impressivegift@gmail.com
+    </p>
   </div>
 );
 
-export default function App() {
-  /* ---------- CART STATE ---------- */
-  const [cartItems, setCartItems] = useState(() => {
-    try {
-      const savedCart = window.localStorage.getItem(STORAGE_KEY);
-      return savedCart ? JSON.parse(savedCart) : [];
-    } catch (error) {
-      console.error("Failed to parse cart from localStorage", error);
-      return [];
-    }
-  });
+/* ── User Layout ── */
+function UserShell() {
+  return (
+    <AuthProvider>
+      <CartProvider>
+        <ScrollToTop />
 
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cartItems));
-  }, [cartItems]);
+        <Navbar />
 
-  /* ---------- ADD TO CART ---------- */
-  const addToCart = (product) => {
-    const quantityToAdd = Number(product.quantity) > 0 ? Number(product.quantity) : 1;
+        <Routes>
+          <Route path="/" element={<Home />} />
 
-    setCartItems((prev) => {
-      const existingItem = prev.find(
-        (item) => item.id === product.id
-      );
+          <Route path="/products" element={<ProductsListPage />} />
 
-      if (existingItem) {
-        return prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + quantityToAdd }
-            : item
-        );
-      }
+          <Route path="/products/:id" element={<ProductDetails />} />
 
-      return [...prev, { ...product, quantity: quantityToAdd }];
-    });
-  };
+          <Route path="/cart" element={<Cart />} />
 
-  /* ---------- UPDATE QUANTITY ---------- */
-  const updateQuantity = (id, qty) => {
-    if (qty <= 0) {
-      removeFromCart(id);
-      return;
-    }
+          <Route path="/checkout" element={<Checkout />} />
 
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, quantity: qty }
-          : item
-      )
-    );
-  };
+          <Route path="/about" element={<About />} />
 
-  /* ---------- REMOVE FROM CART ---------- */
-  const removeFromCart = (id) => {
-    setCartItems((prev) =>
-      prev.filter((item) => item.id !== id)
-    );
-  };
+          <Route path="/contact" element={<Contact />} />
 
-  /* ---------- CLEAR CART ---------- */
-  const clearCart = () => {
-    setCartItems([]);
-  };
+          <Route path="/auth" element={<AuthPage />} />
 
-  /* ---------- CART COUNT ---------- */
-  const cartCount = cartItems.reduce(
-    (total, item) => total + item.quantity,
-    0
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/orders"
+            element={
+              <ProtectedRoute>
+                <Orders />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+
+        <Footer />
+      </CartProvider>
+    </AuthProvider>
   );
+}
 
+/* ── Main App ── */
+export default function App() {
   return (
     <BrowserRouter>
-      <ScrollToTop />
-      {/* ---------- NAVBAR ---------- */}
-      <Navbar cartCount={cartCount} />
 
-      {/* ---------- ROUTES ---------- */}
       <Routes>
-       
-        <Route
-          path="/"
-          element={<Home addToCart={addToCart} />}
-        />
 
+        {/* Admin Login */}
         <Route
-          path="/products"
-          element={<ProductsListPage addToCart={addToCart} />}
-        />
-
-        <Route
-          path="/products/:id"
-          element={<ProductDetails addToCart={addToCart} />}
-        />
-
-        <Route
-          path="/cart"
+          path="/admin/login"
           element={
-            <Cart
-              cartItems={cartItems}
-              updateQuantity={updateQuantity}
-              removeFromCart={removeFromCart}
-            />
-          }
-        />
-        <Route
-          path="/checkout"
-          element={
-            <Checkout
-              cartItems={cartItems}
-              clearCart={clearCart}
-            />
+            <Suspense fallback={<AdminFallback />}>
+              <AdminProvider>
+                <AdminLogin />
+              </AdminProvider>
+            </Suspense>
           }
         />
 
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
+        {/* Admin Dashboard */}
+        <Route
+          path="/admin/*"
+          element={
+            <Suspense fallback={<AdminFallback />}>
+              <AdminProvider>
+                <AdminProtectedRoute>
+                  <AdminLayout />
+                </AdminProtectedRoute>
+              </AdminProvider>
+            </Suspense>
+          }
+        >
+          <Route
+            index
+            element={<Navigate to="/admin/dashboard" replace />}
+          />
+
+          <Route
+            path="dashboard"
+            element={<Dashboard />}
+          />
+
+          <Route
+            path="products"
+            element={<AdminProducts />}
+          />
+
+          <Route
+            path="users"
+            element={<AdminUsers />}
+          />
+
+          <Route
+            path="carts"
+            element={<CartUsers />}
+          />
+
+          <Route
+            path="orders"
+            element={<AdminOrders />}
+          />
+        </Route>
+
+        {/* User Website */}
+        <Route path="/*" element={<UserShell />} />
+
       </Routes>
 
-      {/* ---------- FOOTER ---------- */}
-      <Footer />
     </BrowserRouter>
   );
 }

@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useCart } from "../context/CartContext";
 import { Link } from "react-router-dom";
 
-export default function ProductsListPage({ addToCart }) {
+export default function ProductsListPage() {
+  const { addToCart } = useCart();
   const products = [
     { id: 1, name: "Custom Name Necklace", price: "199.00", category: "Valentine", img: "https://images.unsplash.com/photo-1761210875101-1273b9ae5600?w=600&auto=format&fit=crop&q=60" },
     { id: 2, name: "Handcrafted Candle Set", price: "134.99", category: "Birthday", img: "https://plus.unsplash.com/premium_photo-1764241715990-5b327f6144c0?w=600&auto=format&fit=crop&q=60" },

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useCart } from "../context/CartContext";
 import { useParams, useNavigate } from "react-router-dom";
 
 const products = [
@@ -68,7 +69,8 @@ const products = [
   },
 ];
 
-export default function ProductDetails({ addToCart }) {
+export default function ProductDetails() {
+  const { addToCart } = useCart();
   const { id } = useParams();
   const navigate = useNavigate();
   const product = products.find((p) => p.id === Number(id));
