@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useAuth } from "./AuthContext";
+import { cartAPI } from "../services/api";
 
 const CartContext = createContext(null);
 
@@ -22,57 +23,58 @@ export function CartProvider({ children }) {
 
   const [cartItems, setCartItems] = useState(() => loadCart(cartKey));
 
-  // When auth state changes (login/logout) → load the correct cart
+  // Switch cart when auth state changes
   useEffect(() => {
     setCartItems(loadCart(cartKey));
   }, [cartKey]);
 
-  // Persist cart to correct key on every change
+  // Persist to localStorage
   useEffect(() => {
     localStorage.setItem(cartKey, JSON.stringify(cartItems));
   }, [cartItems, cartKey]);
 
+  // Sync to backend when logged-in user's cart changes
+  useEffect(() => {
+    if (user?.isLoggedIn && cartItems.length >= 0) {
+      cartAPI.sync(user.username, user.name, cartItems).catch(() => {});
+    }
+  }, [cartItems, user]);
+
   const addToCart = useCallback((product) => {
     const qty = Number(product.quantity) > 0 ? Number(product.quantity) : 1;
     setCartItems((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
+      const id = product._id || product.id;
+      const existing = prev.find((item) => (item._id || item.id) === id);
       if (existing) {
         return prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + qty }
-            : item
+          (item._id || item.id) === id ? { ...item, quantity: item.quantity + qty } : item
         );
       }
-      return [...prev, { ...product, price: Number(product.price), quantity: qty }];
+      return [...prev, { ...product, id, price: Number(product.price), quantity: qty }];
     });
   }, []);
 
   const updateQuantity = useCallback((id, qty) => {
     if (qty <= 0) {
-      setCartItems((prev) => prev.filter((item) => item.id !== id));
+      setCartItems((prev) => prev.filter((item) => (item._id || item.id) !== id));
       return;
     }
     setCartItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, quantity: qty } : item))
+      prev.map((item) => (item._id || item.id) === id ? { ...item, quantity: qty } : item)
     );
   }, []);
 
   const removeFromCart = useCallback((id) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
+    setCartItems((prev) => prev.filter((item) => (item._id || item.id) !== id));
   }, []);
 
   const clearCart = useCallback(() => setCartItems([]), []);
 
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + Number(item.price) * item.quantity,
-    0
-  );
+  const subtotal  = cartItems.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
 
   return (
-    <CartContext.Provider
-      value={{ cartItems, addToCart, updateQuantity, removeFromCart, clearCart, cartCount, subtotal }}
-    >
+    <CartContext.Provider value={{ cartItems, addToCart, updateQuantity, removeFromCart, clearCart, cartCount, subtotal }}>
       {children}
     </CartContext.Provider>
   );
